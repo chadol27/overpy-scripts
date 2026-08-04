@@ -61,7 +61,7 @@ def spawnInitialBots():
 rule "초기화 및 안내 HUD 생성":
     tenfoldDamageEnabled = false
     botMovementMode = 1
-    hudText(getAllPlayers(), "영웅변경: {0}+{1}\r\n설정(방장): {0}+{2}".format(inputBindingString(Button.CROUCH), inputBindingString(Button.ABILITY_2), inputBindingString(Button.INTERACT)), null, "번역 및 추가 기능 제작：언급안함\nWIHS27#3669 수정\nHCFYS (260805 업뎃)", HudPosition.LEFT, -3, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    hudText(getAllPlayers(), "영웅변경: {0}+{1}\r\n설정(방장): {0}+{2}".format(inputBindingString(Button.CROUCH), inputBindingString(Button.ABILITY_2), inputBindingString(Button.INTERACT)), null, "번역 및 추가 기능 제작: 언급안함\nWIHS27#3669 수정\nHCFYS (260805 업뎃)", HudPosition.LEFT, -3, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
     hudText(hostPlayer if hostPlayer.settingsMenuOpen else null, "{0}{1} 선택, {2} 변경, {3}+{2} 닫기".format(inputBindingString(Button.PRIMARY_FIRE), inputBindingString(Button.SECONDARY_FIRE), inputBindingString(Button.INTERACT), inputBindingString(Button.CROUCH)), null, "", HudPosition.TOP, 6, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
 
 rule "플레이어 스폰 초기화":
@@ -214,9 +214,11 @@ rule "봇 무빙 5 정지":
 rule "모드 설정 메뉴 열기 및 닫기":
     @Event eachPlayer
     @Condition eventPlayer.isHoldingButton(Button.INTERACT) == true
-    @Condition eventPlayer.isHoldingButton(Button.CROUCH) == true
     @Condition eventPlayer == hostPlayer
     
+    if not eventPlayer.isHoldingButton(Button.CROUCH):
+        return
+
     if eventPlayer.settingsMenuOpen:
         eventPlayer.settingsMenuOpen = false
     else:
@@ -245,11 +247,13 @@ rule "모드 설정 메뉴 항목 이동":
 rule "모드 설정 실행":
     @Event eachPlayer
     @Condition eventPlayer.isHoldingButton(Button.INTERACT) == true
-    @Condition eventPlayer.isHoldingButton(Button.CROUCH) == false
     @Condition eventPlayer.settingsMenuOpen == true
     @Condition eventPlayer.menuSelectionIndex >= 1
     @Condition eventPlayer.menuSelectionIndex <= 3
     @Condition eventPlayer == hostPlayer
+
+    if eventPlayer.isHoldingButton(Button.CROUCH):
+        return
     
     playEffect(getAllPlayers(), DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 200)
     if eventPlayer.menuSelectionIndex == 1:
