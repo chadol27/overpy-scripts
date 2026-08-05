@@ -71,17 +71,17 @@ enum Team:
 def spawnInitialBots():
     @Name "초기 연습 봇 생성"
 
-    createDummy(Hero.GENJI, Team.2, 1, botSpawnPosition)
-    createDummy(Hero.MERCY, Team.2, 2, botSpawnPosition)
-    createDummy(Hero.PHARAH, Team.2, 3, botSpawnPosition)
-    createDummy(Hero.ASHE, Team.2, 4, botSpawnPosition)
-    createDummy(Hero.DVA, Team.2, 5, botSpawnPosition)
-    createDummy(Hero.TRACER, Team.2, 0, botSpawnPosition)
+    createDummy(Hero.GENJI, Team.BOTS, 1, botSpawnPosition)
+    createDummy(Hero.MERCY, Team.BOTS, 2, botSpawnPosition)
+    createDummy(Hero.PHARAH, Team.BOTS, 3, botSpawnPosition)
+    createDummy(Hero.ASHE, Team.BOTS, 4, botSpawnPosition)
+    createDummy(Hero.DVA, Team.BOTS, 5, botSpawnPosition)
+    createDummy(Hero.TRACER, Team.BOTS, 0, botSpawnPosition)
 
 
 rule "초기화 및 안내 HUD 생성":
-    hudText(allHumans, "영웅변경: {0}+{1}\r\n설정(방장): {0}+{2}".format(inputBindingString(Button.CROUCH), inputBindingString(Button.ABILITY_2), inputBindingString(Button.INTERACT)), null, f"번역 및 추가 기능 제작: 언급안함\nWIHS27#3669 수정\n{code} ({version})", HudPosition.LEFT, -3, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
-    hudText(hostPlayer if hostPlayer.settingsMenuOpen else null, "{0}{1} 선택, {2} 변경, {3}+{2} 닫기".format(inputBindingString(Button.PRIMARY_FIRE), inputBindingString(Button.SECONDARY_FIRE), inputBindingString(Button.INTERACT), inputBindingString(Button.CROUCH)), null, "", HudPosition.TOP, 6, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    hudText(allHumans, "영웅변경 {0}{1}\r\n설정(방장) {0}{2}".format(buttonToString(Button.CROUCH), buttonToString(Button.ABILITY_2), buttonToString(Button.INTERACT)), null, f"번역 및 추가 기능 제작: 언급안함\nWIHS27#3669 수정\n{code} ({version})", HudPosition.LEFT, -3, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    hudText(hostPlayer if hostPlayer.settingsMenuOpen else null, "{0}/{1} 선택, {2} 변경, {3}{2} 닫기".format(buttonToString(Button.PRIMARY_FIRE), buttonToString(Button.SECONDARY_FIRE), buttonToString(Button.INTERACT), buttonToString(Button.CROUCH)), null, "", HudPosition.TOP, 6, Color.WHITE, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
 
 
 rule "매치 시간 고정":
