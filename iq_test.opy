@@ -110,7 +110,7 @@ rule "랜덤 / 초기화":
     eventPlayer.removeAllHealthPools()
 
 
-rule "변수1 : 점프":
+rule "1. 점프 - 안내":
     @Event eachPlayer
     @Condition random == 1
     @Condition isGameInProgress() == true
@@ -119,12 +119,11 @@ rule "변수1 : 점프":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [점프] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "점프 금지!")
     wait(0.25)
     hudHeader(eventPlayer, "점프 해보세요^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "점프시 사망":
+rule "1. 점프 - 감지":
     @Event eachPlayer
     @Condition random == 1
     @Condition eventPlayer.isHoldingButton(Button.JUMP) == true
@@ -143,7 +142,7 @@ rule "점프시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 2 : 좌클릭":
+rule "2. 좌클릭 - 안내":
     @Event eachPlayer
     @Condition random == 2
     @Condition isGameInProgress() == true
@@ -152,13 +151,12 @@ rule "변수 2 : 좌클릭":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [좌클릭] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "좌클릭 금지! 대신 공격력 2배!")
     wait(0.25)
     eventPlayer.setDamageDealt(200)
     hudHeader(eventPlayer, "우클릭 금지였나 그랬을껄^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "좌클릭시 사망":
+rule "2. 좌클릭 - 감지":
     @Event eachPlayer
     @Condition random == 2
     @Condition eventPlayer.isHoldingButton(Button.PRIMARY_FIRE) == true
@@ -177,7 +175,7 @@ rule "좌클릭시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 3 : 우클릭":
+rule "3. 우클릭 - 안내":
     @Event eachPlayer
     @Condition random == 3
     @Condition isGameInProgress() == true
@@ -186,12 +184,11 @@ rule "변수 3 : 우클릭":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [우클릭] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "우클릭 금지!")
     wait(0.25)
     hudHeader(eventPlayer, "이상..허다..내가..뭐라고..그랬더라?", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "우클릭시 사망":
+rule "3. 우클릭 - 감지":
     @Event eachPlayer
     @Condition random == 3
     @Condition eventPlayer.isHoldingButton(Button.SECONDARY_FIRE) == true
@@ -210,7 +207,7 @@ rule "우클릭시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 4 : 궁극기":
+rule "4. 궁극기 - 안내":
     @Event eachPlayer
     @Condition random == 4
     @Condition isGameInProgress() == true
@@ -219,12 +216,11 @@ rule "변수 4 : 궁극기":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [궁극기] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "궁 사용 금지!")
     wait(0.25)
     hudHeader(eventPlayer, "방금 말씀드린 그거 쓰고 싶으면 써보세요^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "궁극기시 사망":
+rule "4. 궁극기 - 감지":
     @Event eachPlayer
     @Condition random == 4
     @Condition eventPlayer.isUsingUltimate() == true
@@ -243,21 +239,20 @@ rule "궁극기시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 5 : E스킬":
+rule "5. E스킬 - 안내":
     @Event eachPlayer
     @Condition random == 5
     @Condition isGameInProgress() == true
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ {0} ] 입니다".format(inputBindingString(Button.ABILITY_2)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ E스킬 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "{0} 스킬 금지!".format(inputBindingString(Button.ABILITY_2)))
     wait(0.25)
     hudHeader(eventPlayer, "이번 라운드는 분명 E스킬 금지였지?^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "E스킬 사용시 사망":
+rule "5. E스킬 - 감지":
     @Event eachPlayer
     @Condition random == 5
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_2) == true
@@ -276,21 +271,20 @@ rule "E스킬 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 6 : 쉬프트":
+rule "6. 쉬프트 - 안내":
     @Event eachPlayer
     @Condition random == 6
     @Condition isGameInProgress() == true
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ {0} ] 입니다".format(inputBindingString(Button.ABILITY_1)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ 쉬프트 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "{0} 스킬 금지!".format(inputBindingString(Button.ABILITY_1)))
     wait(0.25)
     hudHeader(eventPlayer, "이번 금지행동은 E스킬 이었을거야^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "쉬프트 사용시 사망":
+rule "6. 쉬프트 - 감지":
     @Event eachPlayer
     @Condition random == 6
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_1) == true
@@ -309,7 +303,7 @@ rule "쉬프트 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 7 : 전진키":
+rule "7. 전진 - 안내":
     @Event eachPlayer
     @Condition random == 7
     @Condition isGameInProgress() == true
@@ -320,12 +314,11 @@ rule "변수 7 : 전진키":
     getPlayersOnHero(Hero.JUNKRAT, Team.ALL).disallowButton(Button.ULTIMATE)
     bigMessage(eventPlayer, "이번 금지행동은 [전진] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "전진 금지! 전진 금지!")
     wait(0.25)
     hudHeader(eventPlayer, "누군가한테 겁나 어려운거 1", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "변수 7 : 전진키 알림 디바":
+rule "7. 전진 - 안내(디바)":
     @Event eachPlayer
     @Hero dva
     @Condition random == 7
@@ -335,7 +328,7 @@ rule "변수 7 : 전진키 알림 디바":
     hudSubheader(eventPlayer, "이 라운드에서만 디바 쉬프트 비활성화됨 (전진과 같은판정)", HudPosition.LEFT, 1, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "변수 7 : 전진키 알림 정크렛":
+rule "7. 전진 - 안내(정크렛)":
     @Event eachPlayer
     @Hero junkrat
     @Condition random == 7
@@ -345,7 +338,7 @@ rule "변수 7 : 전진키 알림 정크렛":
     hudSubheader(eventPlayer, "이 라운드에서만 정크렛 궁 비활성화됨 (전진과 같은판정)", HudPosition.LEFT, 1, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "전진키 사용시 사망":
+rule "7. 전진 - 감지":
     @Event eachPlayer
     @Condition random == 7
     @Condition eventPlayer.isAlive() == true
@@ -364,7 +357,7 @@ rule "전진키 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 8 : hud,채팅":
+rule "8. HUD, 채팅 - 안내":
     @Event eachPlayer
     @Condition random == 8
     @Condition isGameInProgress() == true
@@ -373,7 +366,6 @@ rule "변수 8 : hud,채팅":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "깔끔하게 한판 뜨는 라운드입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "깔끔하게 화면에 있는 모든걸 지워드릴게요")
     wait(1)
     getAllPlayers().disableTextChat()
     eventPlayer.disableGamemodeHud()
@@ -385,7 +377,7 @@ rule "변수 8 : hud,채팅":
     hudHeader(eventPlayer, "화면이 깔끔하니 좋네요 ^-^ (hud,채팅 금지)", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "변수 9 : 후진키":
+rule "9. 후진 - 안내":
     @Event eachPlayer
     @Condition random == 9
     @Condition isGameInProgress() == true
@@ -394,11 +386,10 @@ rule "변수 9 : 후진키":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [후진] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "뒤로가기 금지!")
     hudHeader(eventPlayer, "누군가한테 겁나 어려운거 2", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "후진키 사용시 사망":
+rule "9. 후진 - 감지":
     @Event eachPlayer
     @Condition random == 9
     @Condition eventPlayer.isAlive() == true
@@ -417,7 +408,7 @@ rule "후진키 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 10 : 재장전":
+rule "10. 재장전 - 안내":
     @Event eachPlayer
     @Condition random == 10
     @Condition isGameInProgress() == true
@@ -426,12 +417,11 @@ rule "변수 10 : 재장전":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [R] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "수동 재장전 금지!")
     wait(0.25)
-    hudHeader(eventPlayer, "이번 라운드는 분명 궁금지였지? ^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "이번 라운드는 분명 궁극기였지? ^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "재장전 사용시 사망":
+rule "10. 재장전 - 감지":
     @Event eachPlayer
     @Condition random == 10
     @Condition eventPlayer.isHoldingButton(Button.RELOAD) == true
@@ -450,21 +440,20 @@ rule "재장전 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 11 : 점프 & 쉬프트":
+rule "11. 점프 & 쉬프트 - 안내":
     @Event eachPlayer
     @Condition random == 11
     @Condition isGameInProgress() == true
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 {0} ] 입니다".format(inputBindingString(Button.ABILITY_1)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 쉬프트 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "점프랑 {0} 둘 다 금지!".format(inputBindingString(Button.ABILITY_1)))
     wait(0.25)
     hudHeader(eventPlayer, "점프 금지였어요^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "점프&쉬프트 사용시 사망":
+rule "11. 점프 & 쉬프트 - 감지(점프)":
     @Event eachPlayer
     @Condition random == 11
     @Condition eventPlayer.isHoldingButton(Button.JUMP) == true
@@ -483,7 +472,7 @@ rule "점프&쉬프트 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "점프&쉬프트 사용시 사망":
+rule "11. 점프 & 쉬프트 - 감지(쉬프트)":
     @Event eachPlayer
     @Condition random == 11
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_1) == true
@@ -502,7 +491,7 @@ rule "점프&쉬프트 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 12 : 앞으로만":
+rule "12. 앞으로만 - 안내":
     @Event eachPlayer
     @Condition random == 12
     @Condition isGameInProgress() == true
@@ -511,12 +500,11 @@ rule "변수 12 : 앞으로만":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [← , ↓ , →] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "[← , ↓ , →]  금지!")
     wait(0.25)
     hudHeader(eventPlayer, "누군가한테 겁나 어려운거 3", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "앞으로 제외 다른거 사용시 사망 - 후진":
+rule "12. 앞으로만 - 감지(후진)":
     @Event eachPlayer
     @Condition random == 12
     @Condition eventPlayer.isAlive() == true
@@ -535,7 +523,7 @@ rule "앞으로 제외 다른거 사용시 사망 - 후진":
     eventPlayer.qudtls_count++
 
 
-rule "앞으로 제외 다른거 사용시 사망 - 왼쪽":
+rule "12. 앞으로만 - 감지(왼쪽)":
     @Event eachPlayer
     @Condition random == 12
     @Condition eventPlayer.isAlive() == true
@@ -549,12 +537,12 @@ rule "앞으로 제외 다른거 사용시 사망 - 왼쪽":
     eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
     wait(0.5)
     getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 꽃 '개같은' 왼쪽걸음!".format(eventPlayer))
-    smallMessage(getAllPlayers(), "{0}님의 꽃게 알러지가 지구를 멸망시켰다...".format(eventPlayer))
+    bigMessage(getAllPlayers(), "{0}님의 게같은 왼쪽걸음!".format(eventPlayer))
+    smallMessage(getAllPlayers(), "{0}님의 게 알러지가 지구를 멸망시켰다...".format(eventPlayer))
     eventPlayer.qudtls_count++
 
 
-rule "앞으로 제외 다른거 사용시 사망 - 오른쪽":
+rule "12. 앞으로만 - 감지(오른쪽)":
     @Event eachPlayer
     @Condition random == 12
     @Condition eventPlayer.isAlive() == true
@@ -568,12 +556,12 @@ rule "앞으로 제외 다른거 사용시 사망 - 오른쪽":
     eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
     wait(0.5)
     getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 꽃 '게같은' 오른쪽걸음!".format(eventPlayer))
-    smallMessage(getAllPlayers(), "{0}님의 꽃게 알러지가 지구를 멸망시켰다...".format(eventPlayer))
+    bigMessage(getAllPlayers(), "{0}님의 게같은 오른쪽걸음!".format(eventPlayer))
+    smallMessage(getAllPlayers(), "{0}님의 게 알러지가 지구를 멸망시켰다...".format(eventPlayer))
     eventPlayer.qudtls_count++
 
 
-rule "변수 13 : 궁극기 & 재장전":
+rule "13. 궁극기 & 재장전 - 안내":
     @Event eachPlayer
     @Condition random == 13
     @Condition isGameInProgress() == true
@@ -582,12 +570,11 @@ rule "변수 13 : 궁극기 & 재장전":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [궁극기와 재장전] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "궁극기랑 재장전 둘 다 금지!")
     wait(0.25)
     hudHeader(eventPlayer, "아마 궁극기랑 재장전 금지였을걸요^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "궁극기&재장전 사용시 사망":
+rule "13. 궁극기 & 재장전 - 감지(궁극기)":
     @Event eachPlayer
     @Condition random == 13
     @Condition eventPlayer.isUsingUltimate() == true
@@ -606,7 +593,7 @@ rule "궁극기&재장전 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "궁극기&재장전 사용시 사망":
+rule "13. 궁극기 & 재장전 - 감지(재장전)":
     @Event eachPlayer
     @Condition random == 13
     @Condition eventPlayer.isHoldingButton(Button.RELOAD) == true
@@ -625,7 +612,7 @@ rule "궁극기&재장전 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 14 : 좌클릭 & 우클릭":
+rule "14. 좌클릭 & 우클릭 - 안내":
     @Event eachPlayer
     @Condition random == 14
     @Condition isGameInProgress() == true
@@ -634,13 +621,12 @@ rule "변수 14 : 좌클릭 & 우클릭":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [좌클릭과 우클릭] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "좌우클릭 금지! 대신 공격력을 5배 올려드릴게요!")
     wait(0.25)
     hudHeader(eventPlayer, "근접, 궁, 쉬프트, E 쓰세요^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
     eventPlayer.setDamageDealt(500)
 
 
-rule "좌클릭&우클릭 사용시 사망":
+rule "14. 좌클릭 & 우클릭 - 감지(좌클릭)":
     @Event eachPlayer
     @Condition random == 14
     @Condition eventPlayer.isHoldingButton(Button.PRIMARY_FIRE) == true
@@ -659,7 +645,7 @@ rule "좌클릭&우클릭 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "좌클릭&우클릭 사용시 사망":
+rule "14. 좌클릭 & 우클릭 - 감지(우클릭)":
     @Event eachPlayer
     @Condition random == 14
     @Condition eventPlayer.isHoldingButton(Button.SECONDARY_FIRE) == true
@@ -686,7 +672,7 @@ rule "변수 15 : 근접공격":
     meleerandom = random.randint(1, 3)
 
 
-rule "변수 15 : 근접공격 안내":
+rule "15. 근접공격 - 안내":
     @Event eachPlayer
     @Condition random == 15
     @Condition isGameInProgress() == true
@@ -695,12 +681,11 @@ rule "변수 15 : 근접공격 안내":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 금지행동은 [근접공격] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "근접공격이 금지래요~")
     wait(0.25)
-    hudHeader(eventPlayer, "근접공격시 [니팀] or [내팀] or [모두] 중 하나가 날아갑니다 ^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "근접공격시 랜덤으로 [니팀] or [내팀] or [모두] 폭1사", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "근접공격 사용시 1팀 사망":
+rule "15. 근접공격 - 사망(1팀)":
     @Event eachPlayer
     @Condition meleerandom == 1
     @Condition random == 15
@@ -720,7 +705,7 @@ rule "근접공격 사용시 1팀 사망":
     eventPlayer.qudtls_count++
 
 
-rule "근접공격 사용시 2팀 사망":
+rule "15. 근접공격 - 사망(2팀)":
     @Event eachPlayer
     @Condition meleerandom == 2
     @Condition random == 15
@@ -740,7 +725,7 @@ rule "근접공격 사용시 2팀 사망":
     eventPlayer.qudtls_count++
 
 
-rule "근접공격 사용시 모두 사망":
+rule "15. 근접공격 - 사망(모두)":
     @Event eachPlayer
     @Condition meleerandom == 3
     @Condition random == 15
@@ -760,21 +745,20 @@ rule "근접공격 사용시 모두 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 16 : E스킬 & 쉬프트":
+rule "16. E스킬 & 쉬프트 - 안내":
     @Event eachPlayer
     @Condition random == 16
     @Condition isGameInProgress() == true
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ {0} & {1} ] 입니다".format(inputBindingString(Button.ABILITY_1), inputBindingString(Button.ABILITY_2)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ 쉬프트 & E스킬 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "E랑 쉬프트 둘 다 금지!")
     wait(0.25)
-    hudHeader(eventPlayer, "방금 말씀드렸는데 벌써 까먹은거 아니죠?^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "벌써 까먹은거 아니지? ㅋ", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "E스킬 & 쉬프트 사용시 사망":
+rule "16. E스킬 & 쉬프트 - 감지(쉬프트)":
     @Event eachPlayer
     @Condition random == 16
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_1) == true
@@ -793,7 +777,7 @@ rule "E스킬 & 쉬프트 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "E스킬 & 쉬프트 사용시 사망":
+rule "16. E스킬 & 쉬프트 - 감지(E스킬)":
     @Event eachPlayer
     @Condition random == 16
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_2) == true
@@ -812,7 +796,7 @@ rule "E스킬 & 쉬프트 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 17 : 한방전!":
+rule "17. 한방전 - 안내":
     @Event eachPlayer
     @Condition random == 17
     @Condition isGameInProgress() == true
@@ -821,32 +805,30 @@ rule "변수 17 : 한방전!":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
     bigMessage(eventPlayer, "이번 라운드는 [ 한방전 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "한방에 다 죽어요!")
     eventPlayer.disableEnvironmentCollision(false)
     eventPlayer.setGravity(50)
     eventPlayer.setMaxHealth(1)
     eventPlayer.setHealingReceived(0.1)
     eventPlayer.setDamageDealt(200)
     wait(0.25)
-    hudHeader(eventPlayer, "벽을 뚫고 지나갈 수도 있어요!", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "벽뚫도 ㄱㄴ", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
     eventPlayer.removeAllHealthPools()
 
 
-rule "변수 18 : 점프 & E":
+rule "18. 점프 & E스킬 - 안내":
     @Event eachPlayer
     @Condition random == 18
     @Condition isGameInProgress() == true
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 {0} ] 입니다".format(inputBindingString(Button.ABILITY_2)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 E스킬 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "점프랑 {0} 둘 다 금지!".format(inputBindingString(Button.ABILITY_2)))
     wait(0.25)
     hudHeader(eventPlayer, "금지행동이 궁극기랑 또 뭐였더라?", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "점프&쉬프트 사용시 사망":
+rule "18. 점프 & E스킬 - 감지(점프)":
     @Event eachPlayer
     @Condition random == 18
     @Condition eventPlayer.isHoldingButton(Button.JUMP) == true
@@ -861,11 +843,11 @@ rule "점프&쉬프트 사용시 사망":
     wait(0.5)
     getAllPlayers().teleport(vect(0, -10000, 0))
     bigMessage(getAllPlayers(), "{0}님의 멋진 점프!".format(eventPlayer))
-    smallMessage(getAllPlayers(), "{0}님의 멋진 점프가 지구를 멸망시켰다...".format(eventPlayer))
+    smallMessage(getAllPlayers(), "{0}님의 점프가 지구를 붕괴시켰다...".format(eventPlayer))
     eventPlayer.qudtls_count++
 
 
-rule "점프&쉬프트 사용시 사망":
+rule "18. 점프 & E스킬 - 감지(E스킬)":
     @Event eachPlayer
     @Condition random == 18
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_2) == true
@@ -884,7 +866,7 @@ rule "점프&쉬프트 사용시 사망":
     eventPlayer.qudtls_count++
 
 
-rule "변수 19 : 서있기":
+rule "19. 서있기 - 안내":
     @Event eachPlayer
     @Condition random == 19
     @Condition isGameInProgress() == true
@@ -893,13 +875,12 @@ rule "변수 19 : 서있기":
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 2)
     bigMessage(eventPlayer, "이번 금지행동은 [ 일어서 있기 ] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "[ 일어서 있기 ] 금지!")
     wait(0.25)
-    hudText(eventPlayer, "[앉기] 누르고 있어야 할걸요?", null, "대신 개인전!", HudPosition.LEFT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    hudText(eventPlayer, "[앉기] 누르고 있어야 할걸?", null, "대신 개인전!", HudPosition.LEFT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
     eventPlayer.setMoveSpeed(200)
 
 
-rule "서 있을 시 사망":
+rule "19. 서있기 - 감지":
     @Event eachPlayer
     @Condition random == 19
     @Condition eventPlayer.isAlive() == true
@@ -916,7 +897,7 @@ rule "서 있을 시 사망":
     eventPlayer.teleport(vect(0, -10000, 0))
 
 
-rule "변수 20 : 가만히 있기":
+rule "20. 가만히 있기 - 안내":
     @Event eachPlayer
     @Condition random == 20
     @Condition isGameInProgress() == true
@@ -930,7 +911,7 @@ rule "변수 20 : 가만히 있기":
     hudText(eventPlayer, "멈추면 죽는다!", null, "대신 개인전!", HudPosition.LEFT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "가만히 있을 시 사망":
+rule "20. 가만히 있기 - 감지":
     @Event eachPlayer
     @Condition random == 20
     @Condition eventPlayer.isAlive() == true
@@ -985,7 +966,7 @@ rule "실수한 횟수 표시2":
     hudSubtext(eventPlayer, "현재 {0}번 실수함!".format(eventPlayer.qudtls_count), HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
-rule "실수한 횟수 경고1":
+rule "강퇴까지 3회 남음 - 전체 알림":
     @Event eachPlayer
     @Condition kickcount >= 2
     @Condition kickcount - eventPlayer.qudtls_count == 3
@@ -994,7 +975,7 @@ rule "실수한 횟수 경고1":
     smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 한글어 사용자신가요?".format(eventPlayer, eventPlayer.qudtls_count))
 
 
-rule "실수한 횟수 경고2":
+rule "강퇴까지 2회 남음 - 전체 알림":
     @Event eachPlayer
     @Condition kickcount >= 2
     @Condition kickcount - eventPlayer.qudtls_count == 2
@@ -1003,7 +984,16 @@ rule "실수한 횟수 경고2":
     smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 능지 ㄱㅊ??".format(eventPlayer, eventPlayer.qudtls_count))
 
 
-rule "실수한 횟수 경고3":
+rule "강퇴까지 1회 남음 - 전체 알림":
+    @Event eachPlayer
+    @Condition kickcount >= 2
+    @Condition kickcount - eventPlayer.qudtls_count == 1
+    @Condition eventPlayer.qudtls_count >= 1
+    
+    smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 마지막임 이제".format(eventPlayer, eventPlayer.qudtls_count))
+
+
+rule "강퇴까지 1회 남음 - 개인 경고":
     @Event eachPlayer
     @Condition kickcount - eventPlayer.qudtls_count == 1
     @Condition kickcount >= 2
@@ -1012,7 +1002,7 @@ rule "실수한 횟수 경고3":
     smallMessage(eventPlayer, "한번만 더해봐라")
 
 
-rule "실수한 횟수 경고4":
+rule "강퇴 기준 도달 - 플레이어 제거":
     @Event eachPlayer
     @Condition kickcount >= 2
     @Condition kickcount - eventPlayer.qudtls_count <= 0
@@ -1024,7 +1014,7 @@ rule "실수한 횟수 경고4":
     eventPlayer.removeFromGame()
 
 
-rule "실수한 횟수 경고5":
+rule "강퇴 횟수 1회 설정 - 첫 실수 제거":
     @Event eachPlayer
     @Condition kickcount == 1
     @Condition kickcount - eventPlayer.qudtls_count <= 0
