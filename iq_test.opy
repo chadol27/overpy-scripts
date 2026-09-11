@@ -971,16 +971,15 @@ rule "강퇴 기준 도달 - 플레이어 제거":
     eventPlayer.removeFromGame()
 
 
-# # 이거 무슨 역할인지 모르겠음
-# rule "작은맵 피해 방지":
-#     @Event eachPlayer
-#     @Condition isInSetup() == true
-#     @Condition eventPlayer.isAlive() == true
-#     @Condition isGameInProgress() == false
+rule "시작 전 피해 방지":
+    @Event eachPlayer
+    @Condition isInSetup() == true
+    @Condition eventPlayer.isAlive() == true
+    @Condition isGameInProgress() == false
     
-#     eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 4.9)
-#     if not ruleCondition:
-#         return
+    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 4.9)
+    if not ruleCondition:
+        return
 
 
 rule "디버그: 더미생성":
