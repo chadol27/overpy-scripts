@@ -912,7 +912,7 @@ rule "현재 모드 알림":
     @Condition (isInSetup() or isGameInProgress()) == true
     
     wait(1)
-    hudHeader(eventPlayer, "{}번 실수시 강퇴, 현재 {}".format(kickcount, eventPlayer.qudtls_count), HudPosition.RIGHT, 0, Color.AQUA, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "{}번 실수시 강퇴, 현재 {}".format(kickcount, eventPlayer.qudtls_count), HudPosition.RIGHT, -1, Color.AQUA, HudReeval.VISIBILITY_AND_STRING)
 
 
 rule "워크샵 셋팅":
