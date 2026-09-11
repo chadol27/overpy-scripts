@@ -1,4 +1,4 @@
-#!define code "00000"
+#!define code "M68WD"
 #!define version "v1.260911"
 
 settings {
