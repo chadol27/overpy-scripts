@@ -250,9 +250,9 @@ rule "변수 5 : E스킬":
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ {0} ] 입니다".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_2)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ {0} ] 입니다".format(inputBindingString(Button.ABILITY_2)))
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "{0} 스킬 금지!".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_2)))
+    smallMessage(eventPlayer, "{0} 스킬 금지!".format(inputBindingString(Button.ABILITY_2)))
     wait(0.25)
     hudHeader(eventPlayer, "이번 라운드는 분명 E스킬 금지였지?^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
@@ -283,9 +283,9 @@ rule "변수 6 : 쉬프트":
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ {0} ] 입니다".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_1)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ {0} ] 입니다".format(inputBindingString(Button.ABILITY_1)))
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "{0} 스킬 금지!".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_1)))
+    smallMessage(eventPlayer, "{0} 스킬 금지!".format(inputBindingString(Button.ABILITY_1)))
     wait(0.25)
     hudHeader(eventPlayer, "이번 금지행동은 E스킬 이었을거야^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
@@ -322,7 +322,7 @@ rule "변수 7 : 전진키":
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
     smallMessage(eventPlayer, "전진 금지! 전진 금지!")
     wait(0.25)
-    hudHeader(eventPlayer, "어차피 누군가는 할거에요 포기해^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "누군가한테 겁나 어려운거 1", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
 rule "변수 7 : 전진키 알림 디바":
@@ -395,7 +395,7 @@ rule "변수 9 : 후진키":
     bigMessage(eventPlayer, "이번 금지행동은 [후진] 입니다")
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
     smallMessage(eventPlayer, "뒤로가기 금지!")
-    hudHeader(eventPlayer, "쫄?쫄?쫄?^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "누군가한테 겁나 어려운거 2", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
 rule "후진키 사용시 사망":
@@ -457,9 +457,9 @@ rule "변수 11 : 점프 & 쉬프트":
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 {0} ] 입니다".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_1)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 {0} ] 입니다".format(inputBindingString(Button.ABILITY_1)))
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "점프랑 {0} 둘 다 금지!".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_1)))
+    smallMessage(eventPlayer, "점프랑 {0} 둘 다 금지!".format(inputBindingString(Button.ABILITY_1)))
     wait(0.25)
     hudHeader(eventPlayer, "점프 금지였어요^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
@@ -513,7 +513,7 @@ rule "변수 12 : 앞으로만":
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
     smallMessage(eventPlayer, "[← , ↓ , →]  금지!")
     wait(0.25)
-    hudHeader(eventPlayer, "후진 금지였나?^-^", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "누군가한테 겁나 어려운거 3", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
 
 rule "앞으로 제외 다른거 사용시 사망 - 후진":
@@ -549,7 +549,7 @@ rule "앞으로 제외 다른거 사용시 사망 - 왼쪽":
     eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
     wait(0.5)
     getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 꽃 '게같은' 왼쪽걸음!".format(eventPlayer))
+    bigMessage(getAllPlayers(), "{0}님의 꽃 '개같은' 왼쪽걸음!".format(eventPlayer))
     smallMessage(getAllPlayers(), "{0}님의 꽃게 알러지가 지구를 멸망시켰다...".format(eventPlayer))
     eventPlayer.qudtls_count++
 
@@ -767,7 +767,7 @@ rule "변수 16 : E스킬 & 쉬프트":
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ {0} & {1} ] 입니다".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_1), abilityIconString(eventPlayer.getHero(), Button.ABILITY_2)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ {0} & {1} ] 입니다".format(inputBindingString(Button.ABILITY_1), inputBindingString(Button.ABILITY_2)))
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
     smallMessage(eventPlayer, "E랑 쉬프트 둘 다 금지!")
     wait(0.25)
@@ -839,9 +839,9 @@ rule "변수 18 : 점프 & E":
     
     eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
     eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 {0} ] 입니다".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_2)))
+    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 {0} ] 입니다".format(inputBindingString(Button.ABILITY_2)))
     playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    smallMessage(eventPlayer, "점프랑 {0} 둘 다 금지!".format(abilityIconString(eventPlayer.getHero(), Button.ABILITY_2)))
+    smallMessage(eventPlayer, "점프랑 {0} 둘 다 금지!".format(inputBindingString(Button.ABILITY_2)))
     wait(0.25)
     hudHeader(eventPlayer, "금지행동이 궁극기랑 또 뭐였더라?", HudPosition.LEFT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
 
@@ -1000,7 +1000,7 @@ rule "실수한 횟수 경고2":
     @Condition kickcount - eventPlayer.qudtls_count == 2
     @Condition eventPlayer.qudtls_count >= 1
     
-    smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 능지 괜찮으신가요?".format(eventPlayer, eventPlayer.qudtls_count))
+    smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 능지 ㄱㅊ??".format(eventPlayer, eventPlayer.qudtls_count))
 
 
 rule "실수한 횟수 경고3":
@@ -1009,7 +1009,7 @@ rule "실수한 횟수 경고3":
     @Condition kickcount >= 2
     @Condition eventPlayer.qudtls_count >= 1
     
-    smallMessage(eventPlayer, "마지막 경고입니다. 주의하세요.")
+    smallMessage(eventPlayer, "한번만 더해봐라")
 
 
 rule "실수한 횟수 경고4":
