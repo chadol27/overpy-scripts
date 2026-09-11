@@ -1,7 +1,10 @@
+#!define code "7N5FA"
+#!define version "v2.8"
+
 settings {
     "main": {
-        "modeName": "훈련장+",
-        "description": "Practice Range 2.2 by PMAJellies | WIHS27#3669 버그수정/업데이트 v2.7"
+        "description": f"Practice Range 2.2 by PMAJellies | WIHS27#3669 버그수정/업데이트 {version}",
+        "modeName": "훈련장+"
     },
     "lobby": {
         "allowPlayersInQueue": true,
@@ -10,9 +13,8 @@ settings {
     "gamemodes": {
         "practiceRange": {},
         "general": {
-            "gamemodeStartTrigger": "manual",
-            "respawnTime%": 25,
-            "heroLimit": "off"
+            "heroLimit": "off",
+            "respawnTime%": 0
         }
     },
     "heroes": {
@@ -20,18 +22,18 @@ settings {
             "genji": {
                 "ability2Cooldown%": 0
             },
-            "reinhardt": {
-                "enableSpawningWithUlt": true,
-                "passiveUltGen%": 500,
-                "ultGen%": 500,
-                "secondaryFireCooldown%": 0,
-                "secondaryFireRechargeRate%": 500,
-                "damageDealt%": 10,
-                "ability2Cooldown%": 0
-            },
             "reaper": {
                 "ability2Cooldown%": 0,
                 "ability1Cooldown%": 0
+            },
+            "reinhardt": {
+                "secondaryFireCooldown%": 0,
+                "secondaryFireRechargeRate%": 500,
+                "damageDealt%": 10,
+                "ability2Cooldown%": 0,
+                "enableSpawningWithUlt": true,
+                "passiveUltGen%": 500,
+                "ultGen%": 500
             },
             "sombra": {
                 "passiveUltGen%": 500,
@@ -41,24 +43,22 @@ settings {
             "symmetra": {
                 "ability1Cooldown%": 0
             },
+            "tracer": {
+                "ability1Cooldown%": 0,
+                "damageDealt%": 10,
+                "ability2Cooldown%": 0
+            },
             "widowmaker": {
                 "ability1Cooldown%": 0
-            },
-            "tracer": {
-                "ability2Cooldown%": 0,
-                "ability1Cooldown%": 0,
-                "damageDealt%": 10
             }
         },
-        # "allTeams": {
-        #     "pharah": {
-        #         "enableSecondaryFireUnlimitedFuel": true
-        #     },
-        #     "general": {
-        #         "abilityCooldown%": 0,
-        #         "enableInfiniteAmmo": true
-        #     }
-        # }
+        "allTeams": {
+            "general": {
+                "abilityCooldown%": 0,
+                "enableInfiniteAmmo": true,
+                "enableSpawningWithUlt": true
+            }
+        }
     }
 }
 
@@ -74,6 +74,8 @@ playervar isInBoost 32
 playervar isFlying 33
 playervar infAmmo 34
 playervar infAbill 35
+
+#!suppressWarnings w_dark_color
 
 #!include "original.opy"
 #!include "chadol.opy"

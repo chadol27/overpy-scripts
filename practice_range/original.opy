@@ -486,7 +486,7 @@ rule "Jump Pad":
     @Team 1
     @Condition distance(eventPlayer.getPosition(), vect(56.613, -0.574, -7.1)) <= 2
     
-    eventPlayer.applyImpulse(vect(0, 1, 0), 20, Relativity.TO_WORLD, Impulse.CANCEL_CONTRARY_MOTION)
+    eventPlayer.applyImpulse(vect(0, 1, 0), 20, Relativity.TO_WORLD, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
 
 
 rule "Tracer Bot Foward/Back Control":
@@ -692,7 +692,7 @@ rule "Lucio Bot Out of Bounds":
     @Condition distance(eventPlayer.getPosition(), vect(52.284, -0.826, -17.559)) >= 7.6
     @Condition eventPlayer.iscreatedbot == true
     
-    eventPlayer.applyImpulse(directionTowards(eventPlayer.getPosition(), vect(52.284, -0.826, -17.559)), abs(distance(eventPlayer, vect(52.284, -0.826, -17.559))), Relativity.TO_WORLD, Impulse.CANCEL_CONTRARY_MOTION)
+    eventPlayer.applyImpulse(directionTowards(eventPlayer.getPosition(), vect(52.284, -0.826, -17.559)), abs(distance(eventPlayer, vect(52.284, -0.826, -17.559))), Relativity.TO_WORLD, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
     wait(0.1)
     if RULE_CONDITION:
         goto RULE_START
