@@ -128,8 +128,8 @@ def meleeFail():
 
 
 def standingOrStillFail():
+    wait(0.25, Wait.ABORT_WHEN_FALSE)
     someone_qudtlsed = true
-    wait(1, Wait.ABORT_WHEN_FALSE)
     eventPlayer.cancelPrimaryAction()
     detectionEffects()
     wait(1)
