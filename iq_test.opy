@@ -1,5 +1,5 @@
 #!define code "M68WD"
-#!define version "v4.260912"
+#!define version "v5.260913"
 
 settings {
     "main": {
@@ -87,9 +87,10 @@ globalvar kickcount
 globalvar meleerandom
 globalvar guideBigMessage = ""
 globalvar guideHudHeader = ""
-globalvar guideHudSubtext = ""
+globalvar guideHudSubtext = ""  
 globalvar someone_qudtlsed = false
 globalvar topMessage = ""
+globalvar banHud
 
 #Player variables
 playervar qudtls_count 6
@@ -132,6 +133,7 @@ def standingOrStillFail():
     detectionEffects()
     wait(1)
     eventPlayer.teleport(vect(0, -10000, 0))
+    eventPlayer.qudtls_count++
 
 #Only remove the following directive if the gamemode does not use tricks such as A+0, A*0, A or "", "am" == "**", etc which would otherwise be optimized out.
 #!optimizeStrict
@@ -196,7 +198,7 @@ rule "HUD - 공통":
 rule "HUD - 각 플레이어":
     @Event eachPlayer
 
-    hudHeader(eventPlayer, "{1}번 실수 (강퇴: {0}번)".format(kickcount, eventPlayer.qudtls_count), HudPosition.RIGHT, -1, Color.AQUA, HudReeval.VISIBILITY_AND_STRING)
+    hudHeader(eventPlayer, "{1}번 실수 (강퇴: {0}번)".format(kickcount, eventPlayer.qudtls_count), HudPosition.RIGHT, -1, Color.AQUA, HudReeval.VISIBILITY_AND_STRING, SpecVisibility.NEVER)
 
 
 rule "금지행동 - 안내":
@@ -718,9 +720,33 @@ rule "강퇴 기준 도달 - 플레이어 제거":
     eventPlayer.removeFromGame()
 
 
+rule "강퇴 시 HUD 표시":
+    @Event eachPlayer
+    @Condition kickcount - eventPlayer.qudtls_count <= 0
+    @Condition eventPlayer.qudtls_count >= 1
+
+    hudHeader(getAllPlayers(), f"{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n{eventPlayer} ㅂ12신\n", HudPosition.TOP, 1, Color.LIGHT_RED)
+    banHud = getLastCreatedText()
+    wait(5)
+    destroyHudText(banHud)
+
+
 rule "디버그: 더미생성":
     @Event eachPlayer
     @Condition eventPlayer == hostPlayer
-    @Condition eventPlayer.isHoldingButton(Button.INTERACT) and eventPlayer.isHoldingButton(Button.MELEE)
+    @Condition eventPlayer.isHoldingButton(Button.INTERACT)
+    @Condition eventPlayer.isHoldingButton(Button.MELEE)
     @Condition len(getAllPlayers()) == 1
     createDummy(Hero.KIRIKO, Team.2, -1,eventPlayer)
+
+
+rule "제작자 사기 모드":
+    @Event eachPlayer
+    @Condition "{}".format(eventPlayer) == "WIHS27"
+    @Condition eventPlayer.isHoldingButton(Button.CROUCH)
+    @Condition eventPlayer.isHoldingButton(Button.INTERACT)
+    @Condition eventPlayer.isHoldingButton(Button.MELEE)
+
+    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 60)
+    eventPlayer.setDamageDealt(500)
+    smallMessage(text="제작자 사기맵")
