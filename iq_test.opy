@@ -1,5 +1,5 @@
 #!define code "M68WD"
-#!define version "v2.260912"
+#!define version "v3.260912"
 
 settings {
     "main": {
@@ -89,6 +89,7 @@ globalvar guideBigMessage = ""
 globalvar guideHudHeader = ""
 globalvar guideHudSubtext = ""
 globalvar someone_qudtlsed = false
+globalvar topMessage = ""
 
 #Player variables
 playervar qudtls_count 6
@@ -147,6 +148,7 @@ rule "라운드 준비시간 초기화":
 
     guideHudHeader = ""
     guideHudSubtext = ""
+    topMessage = ""
     
     destroyAllEffects()
     someone_qudtlsed = false
@@ -192,6 +194,7 @@ rule "시작 전 피해 방지":
 rule "HUD - 공통":
     hudText(getAllPlayers(), guideHudHeader, null, guideHudSubtext, HudPosition.RIGHT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
     hudSubheader(getAllPlayers(), f"WIHS27#3669 수정 {version}\n원본: 3WQ1K", HudPosition.LEFT)
+    hudHeader(getAllPlayers(), f"\n{topMessage}\n" if topMessage else "", HudPosition.TOP, reevaluation=HudReeval.VISIBILITY_AND_STRING)
 
 
 
@@ -678,7 +681,7 @@ rule "강퇴까지 3회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 3
     @Condition eventPlayer.qudtls_count >= 1
     
-    bigMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 쉽지않네..".format(eventPlayer, eventPlayer.qudtls_count))
+    topMessage = "{0}님의 {1}번째 실수! 쉽지않네..".format(eventPlayer, eventPlayer.qudtls_count)
 
 
 rule "강퇴까지 2회 남음 - 전체 알림":
@@ -686,7 +689,7 @@ rule "강퇴까지 2회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 2
     @Condition eventPlayer.qudtls_count >= 1
     
-    bigMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 능지 ㄱㅊ??".format(eventPlayer, eventPlayer.qudtls_count))
+    topMessage = "{0}님의 {1}번째 실수! 능지 ㄱㅊ??".format(eventPlayer, eventPlayer.qudtls_count)
 
 
 rule "강퇴까지 1회 남음 - 전체 알림":
@@ -694,7 +697,7 @@ rule "강퇴까지 1회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 1
     @Condition eventPlayer.qudtls_count >= 1
     
-    bigMessage(getAllPlayers(), "{0}님의 {1}번째(마지막) 실수! 한글어 쓰시나요?".format(eventPlayer, eventPlayer.qudtls_count))
+    topMessage = "{0}님의 {1}번째(마지막) 실수! 한글어 쓰시나요?".format(eventPlayer, eventPlayer.qudtls_count)
 
 
 rule "강퇴까지 1회 남음 - 개인 경고":
@@ -711,7 +714,7 @@ rule "강퇴 기준 도달 - 플레이어 제거":
     @Condition eventPlayer.qudtls_count >= 1
     
     smallMessage(eventPlayer, "나가 이새끼야")
-    bigMessage(getAllPlayers(), "{0} 나가.".format(eventPlayer))
+    topMessage = "{0} 나가.".format(eventPlayer)
     wait(3)
     eventPlayer.removeFromGame()
 
