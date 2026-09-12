@@ -1,5 +1,5 @@
 #!define code "M68WD"
-#!define version "v3.260912"
+#!define version "v4.260912"
 
 settings {
     "main": {
@@ -49,10 +49,10 @@ settings {
                 "lifeweaver"
             ],
             "general": {
-                "abilityCooldown%": 33,
-                "ultGen%": 500,
-                "combatUltGen%": 500,
-                "passiveUltGen%": 500
+                "abilityCooldown%": 50,
+                "ultGen%": 300,
+                "combatUltGen%": 300,
+                "passiveUltGen%": 300
             }
         }
     }
@@ -96,7 +96,8 @@ playervar qudtls_count 6
 playervar detectionMessage
 
 
-macro detectionEffects():
+def detectionEffects():
+    eventPlayer.cancelPrimaryAction()
     playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
     playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
     eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
@@ -104,7 +105,6 @@ macro detectionEffects():
 
 def detectFail():
     someone_qudtlsed = true
-    getAllPlayers().cancelPrimaryAction()
     detectionEffects()
     bigMessage(getAllPlayers(), eventPlayer.detectionMessage)
     wait(1)
@@ -115,7 +115,6 @@ def detectFail():
 def meleeFail():
     someone_qudtlsed = true
     meleerandom = random.randint(1, 3)
-    getAllPlayers().cancelPrimaryAction()
     detectionEffects()
     bigMessage(getAllPlayers(), eventPlayer.detectionMessage)
     wait(1)
@@ -130,8 +129,6 @@ def meleeFail():
 
 def standingOrStillFail():
     wait(0.25, Wait.ABORT_WHEN_FALSE)
-    someone_qudtlsed = true
-    eventPlayer.cancelPrimaryAction()
     detectionEffects()
     wait(1)
     eventPlayer.teleport(vect(0, -10000, 0))
@@ -186,15 +183,13 @@ rule "시작 전 피해 방지":
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == false
     
-    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 5)
-    if not ruleCondition:
-        return
+    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 10)
 
 
 rule "HUD - 공통":
     hudText(getAllPlayers(), guideHudHeader, null, guideHudSubtext, HudPosition.RIGHT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
-    hudSubheader(getAllPlayers(), f"WIHS27#3669 수정 {version}\n원본: 3WQ1K", HudPosition.LEFT)
-    hudHeader(getAllPlayers(), f"\n{topMessage}\n" if topMessage else "", HudPosition.TOP, reevaluation=HudReeval.VISIBILITY_AND_STRING)
+    hudSubheader(getAllPlayers(), f"WIHS27#3669 수정 {code}({version})\n원본: 3WQ1K", HudPosition.LEFT)
+    hudHeader(getAllPlayers(), f"\n  {topMessage}  \n" if topMessage else "", HudPosition.TOP, reevaluation=HudReeval.VISIBILITY_AND_STRING)
 
 
 
@@ -227,15 +222,15 @@ rule "금지행동 - 안내":
             guideHudHeader = "방금 말씀드린 그거 쓰고 싶으면 써보세요^-^"
             break
         case ForbiddenActions.ABILITY_2:
-            guideBigMessage = "이번 금지행동은 [ E스킬 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [E스킬] 입니다"
             guideHudHeader = "이번 라운드는 분명 E스킬 금지였지?^-^"
             break
         case ForbiddenActions.ABILITY_1:
-            guideBigMessage = "이번 금지행동은 [ 쉬프트 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [쉬프트] 입니다"
             guideHudHeader = "이번 금지행동은 E스킬 이었을거야^-^"
             break
         case ForbiddenActions.MOVE_FORWARD:
-            guideBigMessage = "이번 금지행동은 [ 전진 ] 입니다(스킬 조심)"
+            guideBigMessage = "이번 금지행동은 [전진] 입니다(스킬 조심)"
             guideHudHeader = "누군가한테 겁나 어려운거 1"
             guideHudSubtext = "스킬 쓸때 조심"
             break
@@ -252,7 +247,7 @@ rule "금지행동 - 안내":
             guideHudHeader = "이번 라운드는 분명 궁극기였지? ^-^"
             break
         case ForbiddenActions.JUMP_SHIFT:
-            guideBigMessage = "이번 금지행동은 [ 점프와 쉬프트 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [점프와 쉬프트] 입니다"
             guideHudHeader = "점프 금지였어요^-^"
             break
         case ForbiddenActions.ONLY_FORWARD:
@@ -272,27 +267,31 @@ rule "금지행동 - 안내":
             guideHudHeader = "근접공격시 랜덤으로 [니팀] or [내팀] or [모두] 폭1사"
             break
         case ForbiddenActions.ABILITY_1_ABILITY_2:
-            guideBigMessage = "이번 금지행동은 [ 쉬프트 & E스킬 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [쉬프트 & E스킬] 입니다"
             guideHudHeader = "벌써 까먹은거 아니지? ㅋ"
             break
         case ForbiddenActions.ONE_SHOT:
-            guideBigMessage = "이번 라운드는 [ 한방전 ] 입니다"
+            guideBigMessage = "이번 라운드는 [한방전] 입니다"
             guideHudHeader = "벽뚫도 ㄱㄴ"
             break
         case ForbiddenActions.JUMP_ABILITY_2:
-            guideBigMessage = "이번 금지행동은 [ 점프와 E스킬 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [점프와 E스킬] 입니다"
             guideHudHeader = "금지행동이 궁극기랑 또 뭐였더라?"
             break
         case ForbiddenActions.STANDING:
-            guideBigMessage = "이번 금지행동은 [ 일어서 있기 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [일어서 있기] 입니다"
             guideHudHeader = "[앉기] 누르고 있어야 할걸?"
             guideHudSubtext = "대신 개인전!"
             break
         case ForbiddenActions.STAY_STILL:
-            guideBigMessage = "이번 금지행동은 [ 가만히 서 있기 ] 입니다"
+            guideBigMessage = "이번 금지행동은 [가만히 서 있기] 입니다"
             guideHudHeader = "멈추면 죽는다!"
             guideHudSubtext = "대신 개인전!"
             break
+    
+    getAllPlayers().cancelPrimaryAction()
+    getAllPlayers().clearStatusEffect(Status.PHASED_OUT)
+    getAllPlayers().clearStatusEffect(Status.INVINCIBLE)
 
     if random == ForbiddenActions.STANDING or random == ForbiddenActions.STAY_STILL:
         getAllPlayers().setStatusEffect(null, Status.FROZEN, 2)
@@ -666,14 +665,14 @@ rule "리겜":
 rule "워크샵 셋팅":
     @Event eachPlayer
     
-    kickcount = createWorkshopSettingInt("설정", "자동강퇴 횟수", 3, 1, 10)
+    kickcount = createWorkshopSettingInt("설정", "자동강퇴 횟수", 4, 1, 10)
 
 
 rule "실수한 횟수 표시1":
     @Event eachPlayer
     @Condition eventPlayer.qudtls_count >= 1
     
-    createInWorldText(getAllPlayers(), "실수 {}번\r\n \r\n ".format(eventPlayer.qudtls_count), eventPlayer, 1.3, Clip.SURFACES, WorldTextReeval.VISIBILITY_POSITION_AND_STRING, Color.RED)
+    createInWorldText(getAllPlayers(), "실수 {}번\n\n".format(eventPlayer.qudtls_count), eventPlayer, 1.3, Clip.SURFACES, WorldTextReeval.VISIBILITY_POSITION_AND_STRING, Color.RED)
 
 
 rule "강퇴까지 3회 남음 - 전체 알림":
@@ -681,7 +680,7 @@ rule "강퇴까지 3회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 3
     @Condition eventPlayer.qudtls_count >= 1
     
-    topMessage = "{0}님의 {1}번째 실수! 쉽지않네..".format(eventPlayer, eventPlayer.qudtls_count)
+    topMessage = "{0}님의 {1}번째 실수! 와 쉽지않네..".format(eventPlayer, eventPlayer.qudtls_count)
 
 
 rule "강퇴까지 2회 남음 - 전체 알림":
@@ -724,4 +723,4 @@ rule "디버그: 더미생성":
     @Condition eventPlayer == hostPlayer
     @Condition eventPlayer.isHoldingButton(Button.INTERACT) and eventPlayer.isHoldingButton(Button.MELEE)
     @Condition len(getAllPlayers()) == 1
-    createDummy(Hero.ANA, Team.2, -1,eventPlayer)
+    createDummy(Hero.KIRIKO, Team.2, -1,eventPlayer)
