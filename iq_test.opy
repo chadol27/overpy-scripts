@@ -82,12 +82,12 @@ enum ForbiddenActions:
 
 #Global variables
 
-globalvar random 0
-globalvar kickcount 9
-globalvar meleerandom 12
-globalvar guideBigMessage 13
-globalvar guideHudHeader 14
-globalvar guideHudSubtext 15
+globalvar random
+globalvar kickcount
+globalvar meleerandom
+globalvar guideBigMessage = ""
+globalvar guideHudHeader = ""
+globalvar guideHudSubtext = ""
 globalvar someone_qudtlsed = false
 
 #Player variables
@@ -139,11 +139,6 @@ def standingOrStillFail():
 #!optimizeStrict
 
 #!suppressWarnings w_dark_color
-
-
-rule "초기화":
-    guideHudHeader = ""
-    guideHudSubtext = ""
 
 
 rule "라운드 준비시간 초기화":
