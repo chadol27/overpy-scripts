@@ -1,5 +1,5 @@
 #!define code "M68WD"
-#!define version "v1.260911"
+#!define version "v2.260912"
 
 settings {
     "main": {
@@ -58,861 +58,611 @@ settings {
     }
 }
 
+enum ForbiddenActions:
+    JUMP = 1
+    LEFT_CLICK = 2
+    RIGHT_CLICK = 3
+    ULTIMATE = 4
+    ABILITY_2 = 5
+    ABILITY_1 = 6
+    MOVE_FORWARD = 7
+    HUD_AND_CHAT = 8
+    MOVE_BACKWARD = 9
+    RELOAD = 10
+    JUMP_SHIFT = 11
+    ONLY_FORWARD = 12
+    ULTIMATE_RELOAD = 13
+    LEFT_RIGHT_CLICK = 14
+    MELEE = 15
+    ABILITY_1_ABILITY_2 = 16
+    ONE_SHOT = 17
+    JUMP_ABILITY_2 = 18
+    STANDING = 19
+    STAY_STILL = 20
+
 #Global variables
 
 globalvar random 0
 globalvar kickcount 9
 globalvar meleerandom 12
+globalvar guideBigMessage 13
+globalvar guideHudHeader 14
+globalvar guideHudSubtext 15
+globalvar someone_qudtlsed = false
 
 #Player variables
 playervar qudtls_count 6
+playervar detectionMessage
+
+
+macro detectionEffects():
+    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
+    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
+    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
+
+
+def detectFail():
+    someone_qudtlsed = true
+    getAllPlayers().cancelPrimaryAction()
+    detectionEffects()
+    bigMessage(getAllPlayers(), eventPlayer.detectionMessage)
+    wait(1)
+    getAllPlayers().teleport(vect(0, -10000, 0))
+    eventPlayer.qudtls_count++
+
+
+def meleeFail():
+    someone_qudtlsed = true
+    meleerandom = random.randint(1, 3)
+    getAllPlayers().cancelPrimaryAction()
+    detectionEffects()
+    bigMessage(getAllPlayers(), eventPlayer.detectionMessage)
+    wait(1)
+    if meleerandom == 1:
+        getPlayers(Team.1).teleport(vect(0, -10000, 0))
+    elif meleerandom == 2:
+        getPlayers(Team.2).teleport(vect(0, -10000, 0))
+    else:
+        getAllPlayers().teleport(vect(0, -10000, 0))
+    eventPlayer.qudtls_count++
+
+
+def standingOrStillFail():
+    someone_qudtlsed = true
+    wait(1, Wait.ABORT_WHEN_FALSE)
+    eventPlayer.cancelPrimaryAction()
+    detectionEffects()
+    wait(1)
+    eventPlayer.teleport(vect(0, -10000, 0))
 
 #Only remove the following directive if the gamemode does not use tricks such as A+0, A*0, A or "", "am" == "**", etc which would otherwise be optimized out.
 #!optimizeStrict
 
 #!suppressWarnings w_dark_color
 
-rule "인스펙터 레코딩 비활성화":
-    @Event eachPlayer
-    
-    disableInspector()
+
+rule "초기화":
+    guideHudHeader = ""
+    guideHudSubtext = ""
 
 
-rule "랜덤 / 초기화":
-    @Event eachPlayer
-    @Condition (isInSetup() or isMatchBetweenRounds()) == true
+rule "라운드 준비시간 초기화":
+    @Event global
+    @Condition isInSetup() == true
+
+    guideHudHeader = ""
+    guideHudSubtext = ""
     
-    destroyAllHudTexts()
     destroyAllEffects()
+    someone_qudtlsed = false
     getAllPlayers().enableTextChat()
-    random = random.randint(1, 20)
-    eventPlayer.enableEnvironmentCollision()
+    random = random.randint(1, len(ForbiddenActions))
+    getAllPlayers().enableEnvironmentCollision()
     getAllPlayers().allowButton(Button.SECONDARY_FIRE)
     getAllPlayers().allowButton(Button.ABILITY_1)
     getAllPlayers().allowButton(Button.ABILITY_2)
     getAllPlayers().allowButton(Button.ULTIMATE)
+    getAllPlayers().setGravity(100)
+    getAllPlayers().setMoveSpeed(100)
+    getAllPlayers().setProjectileSpeed(100)
+    getAllPlayers().setHealingReceived(100)
+    getAllPlayers().setDamageDealt(100)
+    getAllPlayers().setHealingDealt(100)
+    getAllPlayers().setMaxHealth(100)
+    getAllPlayers().stopForcingCurrentHero()
+    getAllPlayers().removeAllHealthPools()
+
+
+rule "라운드 후 초기화":
+    @Condition isMatchBetweenRounds()
     getAllPlayers().enableGamemodeHud()
     getAllPlayers().enableHeroHud()
     getAllPlayers().enableKillFeed()
     enableAnnouncer()
     getAllPlayers().enableNameplatesFor(getAllPlayers())
     getAllPlayers().enableScoreboard()
-    eventPlayer.setGravity(100)
-    eventPlayer.setMoveSpeed(100)
-    eventPlayer.setProjectileSpeed(100)
-    eventPlayer.setHealingReceived(100)
-    eventPlayer.setDamageDealt(100)
-    eventPlayer.setHealingDealt(100)
-    eventPlayer.setMaxHealth(100)
-    eventPlayer.stopForcingCurrentHero()
-    eventPlayer.removeAllHealthPools()
 
 
-rule "1. 점프 - 안내":
+rule "시작 전 피해 방지":
     @Event eachPlayer
-    @Condition random == 1
-    @Condition isGameInProgress() == true
+    @Condition isInSetup() == true
+    @Condition eventPlayer.isAlive() == true
+    @Condition isGameInProgress() == false
     
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [점프] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "점프 해보세요^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 5)
+    if not ruleCondition:
+        return
+
+
+rule "HUD - 공통":
+    hudText(getAllPlayers(), guideHudHeader, null, guideHudSubtext, HudPosition.RIGHT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    hudSubheader(getAllPlayers(), f"WIHS27#3669 수정 {version}\n원본: 3WQ1K", HudPosition.LEFT)
+
+
+
+rule "HUD - 각 플레이어":
+    @Event eachPlayer
+
+    hudHeader(eventPlayer, "{1}번 실수 (강퇴: {0}번)".format(kickcount, eventPlayer.qudtls_count), HudPosition.RIGHT, -1, Color.AQUA, HudReeval.VISIBILITY_AND_STRING)
+
+
+rule "금지행동 - 안내":
+    @Event global
+    @Condition isGameInProgress() == true
+
+    guideHudSubtext = ""
+    switch random:
+        case ForbiddenActions.JUMP:
+            guideBigMessage = "이번 금지행동은 [점프] 입니다"
+            guideHudHeader = "점프 해보세요^-^"
+            break
+        case ForbiddenActions.LEFT_CLICK:
+            guideBigMessage = "이번 금지행동은 [좌클릭] 입니다"
+            guideHudHeader = "우클릭 금지였나 그랬을껄^-^"
+            break
+        case ForbiddenActions.RIGHT_CLICK:
+            guideBigMessage = "이번 금지행동은 [우클릭] 입니다"
+            guideHudHeader = "이상..허다..내가..뭐라고..그랬더라?"
+            break
+        case ForbiddenActions.ULTIMATE:
+            guideBigMessage = "이번 금지행동은 [궁극기] 입니다"
+            guideHudHeader = "방금 말씀드린 그거 쓰고 싶으면 써보세요^-^"
+            break
+        case ForbiddenActions.ABILITY_2:
+            guideBigMessage = "이번 금지행동은 [ E스킬 ] 입니다"
+            guideHudHeader = "이번 라운드는 분명 E스킬 금지였지?^-^"
+            break
+        case ForbiddenActions.ABILITY_1:
+            guideBigMessage = "이번 금지행동은 [ 쉬프트 ] 입니다"
+            guideHudHeader = "이번 금지행동은 E스킬 이었을거야^-^"
+            break
+        case ForbiddenActions.MOVE_FORWARD:
+            guideBigMessage = "이번 금지행동은 [ 전진 ] 입니다(스킬 조심)"
+            guideHudHeader = "누군가한테 겁나 어려운거 1"
+            guideHudSubtext = "스킬 쓸때 조심"
+            break
+        case ForbiddenActions.HUD_AND_CHAT:
+            guideBigMessage = "깔끔하게 한판 뜨는 라운드입니다"
+            guideHudHeader = "화면이 깔끔하니 좋네요 ^-^ (hud,채팅 금지)"
+            break
+        case ForbiddenActions.MOVE_BACKWARD:
+            guideBigMessage = "이번 금지행동은 [후진] 입니다"
+            guideHudHeader = "누군가한테 겁나 어려운거 2"
+            break
+        case ForbiddenActions.RELOAD:
+            guideBigMessage = "이번 금지행동은 [R] 입니다"
+            guideHudHeader = "이번 라운드는 분명 궁극기였지? ^-^"
+            break
+        case ForbiddenActions.JUMP_SHIFT:
+            guideBigMessage = "이번 금지행동은 [ 점프와 쉬프트 ] 입니다"
+            guideHudHeader = "점프 금지였어요^-^"
+            break
+        case ForbiddenActions.ONLY_FORWARD:
+            guideBigMessage = "이번 금지행동은 [← , ↓ , →] 입니다"
+            guideHudHeader = "누군가한테 겁나 어려운거 3"
+            break
+        case ForbiddenActions.ULTIMATE_RELOAD:
+            guideBigMessage = "이번 금지행동은 [궁극기와 재장전] 입니다"
+            guideHudHeader = "아마 궁극기랑 재장전 금지였을걸요^-^"
+            break
+        case ForbiddenActions.LEFT_RIGHT_CLICK:
+            guideBigMessage = "이번 금지행동은 [좌클릭과 우클릭] 입니다"
+            guideHudHeader = "근접, 궁, 쉬프트, E 쓰세요^-^"
+            break
+        case ForbiddenActions.MELEE:
+            guideBigMessage = "이번 금지행동은 [근접공격] 입니다"
+            guideHudHeader = "근접공격시 랜덤으로 [니팀] or [내팀] or [모두] 폭1사"
+            break
+        case ForbiddenActions.ABILITY_1_ABILITY_2:
+            guideBigMessage = "이번 금지행동은 [ 쉬프트 & E스킬 ] 입니다"
+            guideHudHeader = "벌써 까먹은거 아니지? ㅋ"
+            break
+        case ForbiddenActions.ONE_SHOT:
+            guideBigMessage = "이번 라운드는 [ 한방전 ] 입니다"
+            guideHudHeader = "벽뚫도 ㄱㄴ"
+            break
+        case ForbiddenActions.JUMP_ABILITY_2:
+            guideBigMessage = "이번 금지행동은 [ 점프와 E스킬 ] 입니다"
+            guideHudHeader = "금지행동이 궁극기랑 또 뭐였더라?"
+            break
+        case ForbiddenActions.STANDING:
+            guideBigMessage = "이번 금지행동은 [ 일어서 있기 ] 입니다"
+            guideHudHeader = "[앉기] 누르고 있어야 할걸?"
+            guideHudSubtext = "대신 개인전!"
+            break
+        case ForbiddenActions.STAY_STILL:
+            guideBigMessage = "이번 금지행동은 [ 가만히 서 있기 ] 입니다"
+            guideHudHeader = "멈추면 죽는다!"
+            guideHudSubtext = "대신 개인전!"
+            break
+
+    if random == ForbiddenActions.STANDING or random == ForbiddenActions.STAY_STILL:
+        getAllPlayers().setStatusEffect(null, Status.FROZEN, 2)
+        getAllPlayers().setStatusEffect(null, Status.INVINCIBLE, 2)
+    else:
+        getAllPlayers().setStatusEffect(null, Status.FROZEN, 1)
+        getAllPlayers().setStatusEffect(null, Status.INVINCIBLE, 1)
+
+    if random == ForbiddenActions.ONE_SHOT:
+        getAllPlayers().disableEnvironmentCollision(false)
+        getAllPlayers().setGravity(50)
+        getAllPlayers().setMaxHealth(1)
+        getAllPlayers().setHealingReceived(0.1)
+        getAllPlayers().setDamageDealt(200)
+
+    bigMessage(getAllPlayers(), guideBigMessage)
+    playEffect(getAllPlayers(), DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, null, 100)
+
+    if random == ForbiddenActions.HUD_AND_CHAT:
+        wait(1)
+        getAllPlayers().disableTextChat()
+        getAllPlayers().disableGamemodeHud()
+        getAllPlayers().disableHeroHud()
+        getAllPlayers().disableKillFeed()
+        getAllPlayers().disableNameplatesFor(getAllPlayers())
+        getAllPlayers().disableScoreboard()
+        disableAnnouncer()
+    else:
+        wait(0.25)
+
+    if random == ForbiddenActions.LEFT_CLICK:
+        getAllPlayers().setDamageDealt(200)
+    elif random == ForbiddenActions.LEFT_RIGHT_CLICK:
+        getAllPlayers().setDamageDealt(500)
+    elif random == ForbiddenActions.ONE_SHOT:
+        getAllPlayers().removeAllHealthPools()
+    elif random == ForbiddenActions.STANDING:
+        getAllPlayers().setMoveSpeed(200)
 
 
 rule "1. 점프 - 감지":
     @Event eachPlayer
-    @Condition random == 1
+    @Condition random == ForbiddenActions.JUMP
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.JUMP) == true
     @Condition eventPlayer.isAlive() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition isGameInProgress() == true
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 멋진 점프!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "2. 좌클릭 - 안내":
-    @Event eachPlayer
-    @Condition random == 2
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [좌클릭] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    eventPlayer.setDamageDealt(200)
-    hudHeader(eventPlayer, "우클릭 금지였나 그랬을껄^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 멋진 점프!".format(eventPlayer)
+    detectFail()
 
 
 rule "2. 좌클릭 - 감지":
     @Event eachPlayer
-    @Condition random == 2
+    @Condition random == ForbiddenActions.LEFT_CLICK
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.PRIMARY_FIRE) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 좌클 실화냐? 진짜 가슴이 웅장해진다".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "3. 우클릭 - 안내":
-    @Event eachPlayer
-    @Condition random == 3
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [우클릭] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "이상..허다..내가..뭐라고..그랬더라?", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 좌클 실화냐? 진짜 가슴이 웅장해진다".format(eventPlayer)
+    detectFail()
 
 
 rule "3. 우클릭 - 감지":
     @Event eachPlayer
-    @Condition random == 3
+    @Condition random == ForbiddenActions.RIGHT_CLICK
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.SECONDARY_FIRE) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 무대를 장악하는 우클릭!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "4. 궁극기 - 안내":
-    @Event eachPlayer
-    @Condition random == 4
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [궁극기] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "방금 말씀드린 그거 쓰고 싶으면 써보세요^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 무대를 장악하는 우클릭!".format(eventPlayer)
+    detectFail()
 
 
 rule "4. 궁극기 - 감지":
     @Event eachPlayer
-    @Condition random == 4
+    @Condition random == ForbiddenActions.ULTIMATE
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isUsingUltimate() == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 판을 만드는 궁극기!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "5. E스킬 - 안내":
-    @Event eachPlayer
-    @Condition random == 5
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ E스킬 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "이번 라운드는 분명 E스킬 금지였지?^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 판을 만드는 궁극기!".format(eventPlayer)
+    detectFail()
 
 
 rule "5. E스킬 - 감지":
     @Event eachPlayer
-    @Condition random == 5
+    @Condition random == ForbiddenActions.ABILITY_2
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_2) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 화려한 E스킬!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "6. 쉬프트 - 안내":
-    @Event eachPlayer
-    @Condition random == 6
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 쉬프트 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "이번 금지행동은 E스킬 이었을거야^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 화려한 E스킬!".format(eventPlayer)
+    detectFail()
 
 
 rule "6. 쉬프트 - 감지":
     @Event eachPlayer
-    @Condition random == 6
+    @Condition random == ForbiddenActions.ABILITY_1
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_1) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 멋진 쉬프트!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "7. 전진 - 안내":
-    @Event eachPlayer
-    @Condition random == 7
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    getPlayersOnHero(Hero.DVA, Team.ALL).disallowButton(Button.ABILITY_1)
-    getPlayersOnHero(Hero.JUNKRAT, Team.ALL).disallowButton(Button.ULTIMATE)
-    bigMessage(eventPlayer, "이번 금지행동은 [전진] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "누군가한테 겁나 어려운거 1", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
-
-
-rule "7. 전진 - 안내(디바)":
-    @Event eachPlayer
-    @Hero dva
-    @Condition random == 7
-    @Condition isGameInProgress() == true
-    
-    wait(0.25)
-    hudSubheader(eventPlayer, "이 라운드에서만 디바 쉬프트 비활성화됨 (전진과 같은판정)", HudPosition.RIGHT, 1, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
-
-
-rule "7. 전진 - 안내(정크렛)":
-    @Event eachPlayer
-    @Hero junkrat
-    @Condition random == 7
-    @Condition isGameInProgress() == true
-    
-    wait(0.25)
-    hudSubheader(eventPlayer, "이 라운드에서만 정크렛 궁 비활성화됨 (전진과 같은판정)", HudPosition.RIGHT, 1, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 멋진 쉬프트!".format(eventPlayer)
+    detectFail()
 
 
 rule "7. 전진 - 감지":
     @Event eachPlayer
-    @Condition random == 7
+    @Condition random == ForbiddenActions.MOVE_FORWARD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition eventPlayer.getThrottle() == vect(0, 0, 1)
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 당당한 전진!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "8. HUD, 채팅 - 안내":
-    @Event eachPlayer
-    @Condition random == 8
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "깔끔하게 한판 뜨는 라운드입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(1)
-    getAllPlayers().disableTextChat()
-    eventPlayer.disableGamemodeHud()
-    eventPlayer.disableHeroHud()
-    eventPlayer.disableKillFeed()
-    eventPlayer.disableNameplatesFor(getAllPlayers())
-    eventPlayer.disableScoreboard()
-    disableAnnouncer()
-    hudHeader(eventPlayer, "화면이 깔끔하니 좋네요 ^-^ (hud,채팅 금지)", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
-
-
-rule "9. 후진 - 안내":
-    @Event eachPlayer
-    @Condition random == 9
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [후진] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    hudHeader(eventPlayer, "누군가한테 겁나 어려운거 2", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 당당한 전진!".format(eventPlayer)
+    detectFail()
 
 
 rule "9. 후진 - 감지":
     @Event eachPlayer
-    @Condition random == 9
+    @Condition random == ForbiddenActions.MOVE_BACKWARD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition eventPlayer.getThrottle() == vect(0, 0, -1)
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 졸렬한 후진!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "10. 재장전 - 안내":
-    @Event eachPlayer
-    @Condition random == 10
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [R] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "이번 라운드는 분명 궁극기였지? ^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 졸렬한 후진!".format(eventPlayer)
+    detectFail()
 
 
 rule "10. 재장전 - 감지":
     @Event eachPlayer
-    @Condition random == 10
+    @Condition random == ForbiddenActions.RELOAD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.RELOAD) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 환경을 생각하지 않은 재장전!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "11. 점프 & 쉬프트 - 안내":
-    @Event eachPlayer
-    @Condition random == 11
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 쉬프트 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "점프 금지였어요^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 환경을 생각하지 않은 재장전!".format(eventPlayer)
+    detectFail()
 
 
 rule "11. 점프 & 쉬프트 - 감지(점프)":
     @Event eachPlayer
-    @Condition random == 11
+    @Condition random == ForbiddenActions.JUMP_SHIFT
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.JUMP) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 멋진 점프!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 멋진 점프!".format(eventPlayer)
+    detectFail()
 
 
 rule "11. 점프 & 쉬프트 - 감지(쉬프트)":
     @Event eachPlayer
-    @Condition random == 11
+    @Condition random == ForbiddenActions.JUMP_SHIFT
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_1) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 화려한 쉬프트 사용!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "12. 앞으로만 - 안내":
-    @Event eachPlayer
-    @Condition random == 12
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [← , ↓ , →] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "누군가한테 겁나 어려운거 3", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 화려한 쉬프트 사용!".format(eventPlayer)
+    detectFail()
 
 
 rule "12. 앞으로만 - 감지(후진)":
     @Event eachPlayer
-    @Condition random == 12
+    @Condition random == ForbiddenActions.ONLY_FORWARD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition eventPlayer.getThrottle() == vect(0, 0, -1)
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 졸렬한 후진!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 졸렬한 후진!".format(eventPlayer)
+    detectFail()
 
 
 rule "12. 앞으로만 - 감지(왼쪽)":
     @Event eachPlayer
-    @Condition random == 12
+    @Condition random == ForbiddenActions.ONLY_FORWARD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition eventPlayer.getThrottle() == vect(1, 0, 0)
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 게같은 왼쪽걸음!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 게같은 왼쪽걸음!".format(eventPlayer)
+    detectFail()
 
 
 rule "12. 앞으로만 - 감지(오른쪽)":
     @Event eachPlayer
-    @Condition random == 12
+    @Condition random == ForbiddenActions.ONLY_FORWARD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition eventPlayer.getThrottle() == vect(-1, 0, 0)
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 게같은 오른쪽걸음!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "13. 궁극기 & 재장전 - 안내":
-    @Event eachPlayer
-    @Condition random == 13
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [궁극기와 재장전] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "아마 궁극기랑 재장전 금지였을걸요^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 게같은 오른쪽걸음!".format(eventPlayer)
+    detectFail()
 
 
 rule "13. 궁극기 & 재장전 - 감지(궁극기)":
     @Event eachPlayer
-    @Condition random == 13
+    @Condition random == ForbiddenActions.ULTIMATE_RELOAD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isUsingUltimate() == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 판을 뒤엎는 궁극기!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 판을 뒤엎는 궁극기!".format(eventPlayer)
+    detectFail()
 
 
 rule "13. 궁극기 & 재장전 - 감지(재장전)":
     @Event eachPlayer
-    @Condition random == 13
+    @Condition random == ForbiddenActions.ULTIMATE_RELOAD
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.RELOAD) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 환경을 생각하지 않은 재장전!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "14. 좌클릭 & 우클릭 - 안내":
-    @Event eachPlayer
-    @Condition random == 14
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [좌클릭과 우클릭] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "근접, 궁, 쉬프트, E 쓰세요^-^", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
-    eventPlayer.setDamageDealt(500)
+    eventPlayer.detectionMessage = "{0}님의 환경을 생각하지 않은 재장전!".format(eventPlayer)
+    detectFail()
 
 
 rule "14. 좌클릭 & 우클릭 - 감지(좌클릭)":
     @Event eachPlayer
-    @Condition random == 14
+    @Condition random == ForbiddenActions.LEFT_RIGHT_CLICK
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.PRIMARY_FIRE) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 좌클 실화냐? 진짜 가슴이 웅장해진다".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 좌클 실화냐? 진짜 가슴이 웅장해진다".format(eventPlayer)
+    detectFail()
 
 
 rule "14. 좌클릭 & 우클릭 - 감지(우클릭)":
     @Event eachPlayer
-    @Condition random == 14
+    @Condition random == ForbiddenActions.LEFT_RIGHT_CLICK
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.SECONDARY_FIRE) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 무대를 장악하는 우클릭!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 무대를 장악하는 우클릭!".format(eventPlayer)
+    detectFail()
 
 
-rule "변수 15 : 근접공격":
+rule "15. 근접공격 - 감지":
     @Event eachPlayer
-    @Condition random == 15
-    @Condition isGameInProgress() == true
-    
-    meleerandom = random.randint(1, 3)
-
-
-rule "15. 근접공격 - 안내":
-    @Event eachPlayer
-    @Condition random == 15
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [근접공격] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "근접공격시 랜덤으로 [니팀] or [내팀] or [모두] 폭1사", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
-
-
-rule "15. 근접공격 - 사망(1팀)":
-    @Event eachPlayer
-    @Condition meleerandom == 1
-    @Condition random == 15
+    @Condition random == ForbiddenActions.MELEE
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.MELEE) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
-    
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getPlayers(Team.1).teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 타노스 기운을 담은 주먹질!".format(eventPlayer))
-    eventPlayer.qudtls_count++
 
-
-rule "15. 근접공격 - 사망(2팀)":
-    @Event eachPlayer
-    @Condition meleerandom == 2
-    @Condition random == 15
-    @Condition eventPlayer.isHoldingButton(Button.MELEE) == true
-    @Condition eventPlayer.isAlive() == true
-    @Condition isGameInProgress() == true
-    @Condition eventPlayer.hasStatus(Status.FROZEN) == false
-    
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getPlayers(Team.2).teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 타노스 기운을 담은 주먹질!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "15. 근접공격 - 사망(모두)":
-    @Event eachPlayer
-    @Condition meleerandom == 3
-    @Condition random == 15
-    @Condition eventPlayer.isHoldingButton(Button.MELEE) == true
-    @Condition eventPlayer.isAlive() == true
-    @Condition isGameInProgress() == true
-    @Condition eventPlayer.hasStatus(Status.FROZEN) == false
-    
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 타노스 기운을 담은 주먹질!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "16. E스킬 & 쉬프트 - 안내":
-    @Event eachPlayer
-    @Condition random == 16
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 쉬프트 & E스킬 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "벌써 까먹은거 아니지? ㅋ", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 타노스 기운을 담은 주먹질!".format(eventPlayer)
+    meleeFail()
 
 
 rule "16. E스킬 & 쉬프트 - 감지(쉬프트)":
     @Event eachPlayer
-    @Condition random == 16
+    @Condition random == ForbiddenActions.ABILITY_1_ABILITY_2
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_1) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 멋진 쉬프트!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 멋진 쉬프트!".format(eventPlayer)
+    detectFail()
 
 
 rule "16. E스킬 & 쉬프트 - 감지(E스킬)":
     @Event eachPlayer
-    @Condition random == 16
+    @Condition random == ForbiddenActions.ABILITY_1_ABILITY_2
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_2) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 화려한 E스킬!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "17. 한방전 - 안내":
-    @Event eachPlayer
-    @Condition random == 17
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 라운드는 [ 한방전 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    eventPlayer.disableEnvironmentCollision(false)
-    eventPlayer.setGravity(50)
-    eventPlayer.setMaxHealth(1)
-    eventPlayer.setHealingReceived(0.1)
-    eventPlayer.setDamageDealt(200)
-    wait(0.25)
-    hudHeader(eventPlayer, "벽뚫도 ㄱㄴ", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
-    eventPlayer.removeAllHealthPools()
-
-
-rule "18. 점프 & E스킬 - 안내":
-    @Event eachPlayer
-    @Condition random == 18
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 1)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 1)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 점프와 E스킬 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudHeader(eventPlayer, "금지행동이 궁극기랑 또 뭐였더라?", HudPosition.RIGHT, 0, Color.RED, HudReeval.VISIBILITY_AND_STRING)
+    eventPlayer.detectionMessage = "{0}님의 화려한 E스킬!".format(eventPlayer)
+    detectFail()
 
 
 rule "18. 점프 & E스킬 - 감지(점프)":
     @Event eachPlayer
-    @Condition random == 18
+    @Condition random == ForbiddenActions.JUMP_ABILITY_2
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.JUMP) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 멋진 점프!".format(eventPlayer))
-    eventPlayer.qudtls_count++
+    eventPlayer.detectionMessage = "{0}님의 멋진 점프!".format(eventPlayer)
+    detectFail()
 
 
 rule "18. 점프 & E스킬 - 감지(E스킬)":
     @Event eachPlayer
-    @Condition random == 18
+    @Condition random == ForbiddenActions.JUMP_ABILITY_2
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isHoldingButton(Button.ABILITY_2) == true
     @Condition eventPlayer.isAlive() == true
     @Condition isGameInProgress() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     
-    getAllPlayers().cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    getAllPlayers().teleport(vect(0, -10000, 0))
-    bigMessage(getAllPlayers(), "{0}님의 화려한 E스킬 사용!".format(eventPlayer))
-    eventPlayer.qudtls_count++
-
-
-rule "19. 서있기 - 안내":
-    @Event eachPlayer
-    @Condition random == 19
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 2)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 2)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 일어서 있기 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudText(eventPlayer, "[앉기] 누르고 있어야 할걸?", null, "대신 개인전!", HudPosition.RIGHT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
-    eventPlayer.setMoveSpeed(200)
+    eventPlayer.detectionMessage = "{0}님의 화려한 E스킬 사용!".format(eventPlayer)
+    detectFail()
 
 
 rule "19. 서있기 - 감지":
     @Event eachPlayer
-    @Condition random == 19
+    @Condition random == ForbiddenActions.STANDING
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition isGameInProgress() == true
     @Condition eventPlayer.isHoldingButton(Button.CROUCH) == false
     
-    wait(0.5, Wait.ABORT_WHEN_FALSE)
-    eventPlayer.cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    eventPlayer.teleport(vect(0, -10000, 0))
-
-
-rule "20. 가만히 있기 - 안내":
-    @Event eachPlayer
-    @Condition random == 20
-    @Condition isGameInProgress() == true
-    
-    eventPlayer.setStatusEffect(null, Status.FROZEN, 2)
-    eventPlayer.setStatusEffect(null, Status.INVINCIBLE, 2)
-    bigMessage(eventPlayer, "이번 금지행동은 [ 가만히 서 있기 ] 입니다")
-    playEffect(eventPlayer, DynamicEffect.BUFF_EXPLOSION_SOUND, Color.WHITE, eventPlayer, 100)
-    wait(0.25)
-    hudText(eventPlayer, "멈추면 죽는다!", null, "대신 개인전!", HudPosition.RIGHT, 0, Color.RED, Color.WHITE, Color.WHITE, HudReeval.VISIBILITY_AND_STRING)
+    standingOrStillFail()
 
 
 rule "20. 가만히 있기 - 감지":
     @Event eachPlayer
-    @Condition random == 20
+    @Condition random == ForbiddenActions.STAY_STILL
+    @Condition someone_qudtlsed == false
     @Condition eventPlayer.isAlive() == true
     @Condition eventPlayer.hasStatus(Status.FROZEN) == false
     @Condition isGameInProgress() == true
     @Condition eventPlayer.isStanding() == true
     
-    wait(0.25, Wait.ABORT_WHEN_FALSE)
-    eventPlayer.cancelPrimaryAction()
-    playEffect(getAllPlayers(), DynamicEffect.DEBUFF_IMPACT_SOUND, Color.WHITE, eventPlayer, 100)
-    playEffect(getAllPlayers(), DynamicEffect.RING_EXPLOSION, Color.RED, eventPlayer, 50)
-    eventPlayer.applyImpulse(Vector.UP, max(0, 9999999), Relativity.TO_PLAYER, Impulse.CANCEL_CONTRARY_MOTION_XYZ)
-    wait(0.5)
-    eventPlayer.teleport(vect(0, -10000, 0))
+    standingOrStillFail()
 
 
 rule "리겜":
     @Condition isMatchComplete() == true
     
-    wait(1)
+    wait(3)
     restartMatch()
-
-
-rule "현재 모드 알림":
-    @Event eachPlayer
-    @Condition (isInSetup() or isGameInProgress()) == true
-    
-    wait(1)
-    hudHeader(eventPlayer, "{}번 실수시 강퇴, 현재 {}".format(kickcount, eventPlayer.qudtls_count), HudPosition.RIGHT, -1, Color.AQUA, HudReeval.VISIBILITY_AND_STRING)
 
 
 rule "워크샵 셋팅":
@@ -925,7 +675,7 @@ rule "실수한 횟수 표시1":
     @Event eachPlayer
     @Condition eventPlayer.qudtls_count >= 1
     
-    createInWorldText(getAllPlayers(), "{0}번 실수함!\r\n \r\n ".format(eventPlayer.qudtls_count), eventPlayer, 1.3, Clip.SURFACES, WorldTextReeval.VISIBILITY_POSITION_AND_STRING, Color.RED)
+    createInWorldText(getAllPlayers(), "실수 {}번\r\n \r\n ".format(eventPlayer.qudtls_count), eventPlayer, 1.3, Clip.SURFACES, WorldTextReeval.VISIBILITY_POSITION_AND_STRING, Color.RED)
 
 
 rule "강퇴까지 3회 남음 - 전체 알림":
@@ -933,7 +683,7 @@ rule "강퇴까지 3회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 3
     @Condition eventPlayer.qudtls_count >= 1
     
-    smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 한글어 사용자신가요?".format(eventPlayer, eventPlayer.qudtls_count))
+    bigMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 쉽지않네..".format(eventPlayer, eventPlayer.qudtls_count))
 
 
 rule "강퇴까지 2회 남음 - 전체 알림":
@@ -941,7 +691,7 @@ rule "강퇴까지 2회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 2
     @Condition eventPlayer.qudtls_count >= 1
     
-    smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 능지 ㄱㅊ??".format(eventPlayer, eventPlayer.qudtls_count))
+    bigMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 능지 ㄱㅊ??".format(eventPlayer, eventPlayer.qudtls_count))
 
 
 rule "강퇴까지 1회 남음 - 전체 알림":
@@ -949,7 +699,7 @@ rule "강퇴까지 1회 남음 - 전체 알림":
     @Condition kickcount - eventPlayer.qudtls_count == 1
     @Condition eventPlayer.qudtls_count >= 1
     
-    smallMessage(getAllPlayers(), "{0}님의 {1}번째 실수! 마지막임 이제".format(eventPlayer, eventPlayer.qudtls_count))
+    bigMessage(getAllPlayers(), "{0}님의 {1}번째(마지막) 실수! 한글어 쓰시나요?".format(eventPlayer, eventPlayer.qudtls_count))
 
 
 rule "강퇴까지 1회 남음 - 개인 경고":
@@ -967,19 +717,8 @@ rule "강퇴 기준 도달 - 플레이어 제거":
     
     smallMessage(eventPlayer, "나가 이새끼야")
     bigMessage(getAllPlayers(), "{0} 나가.".format(eventPlayer))
-    wait(1.5)
+    wait(3)
     eventPlayer.removeFromGame()
-
-
-rule "시작 전 피해 방지":
-    @Event eachPlayer
-    @Condition isInSetup() == true
-    @Condition eventPlayer.isAlive() == true
-    @Condition isGameInProgress() == false
-    
-    eventPlayer.setStatusEffect(null, Status.PHASED_OUT, 4.9)
-    if not ruleCondition:
-        return
 
 
 rule "디버그: 더미생성":
